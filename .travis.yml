@@ -15,7 +15,7 @@ before_script:
   - pip install coverage
 #  - python setup.py install
 #  - python setup.py test
-  - nosetests ./tests/ --with-coverage --cover-html --cover-tests
+#  - nosetests ./tests/ --with-coverage --cover-html --cover-tests
 
 script:
   - |
