@@ -7,7 +7,7 @@ Welcome to P2EE's documentation!
 
    modules
 
-Indices and tables
+Indices
 ==================
 
 * :ref:`genindex`
