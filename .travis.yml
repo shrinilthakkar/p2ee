@@ -24,11 +24,11 @@ script:
       pip install -U sphinx
       git checkout -b gh-pages
       sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
-      sphinx-build -b html ./sphinx/rst/. ./sphinx/html/.
+      sphinx-build -b html ./sphinx/rst/ ./sphinx/html/
       cp -R ./sphinx/html/* .
       git config --global user.name "ghpages"
       git config --global user.email "ghpages@moengage.com"
       git add .
       git commit -am "generating documentation"
-      git push -u -f https://$user:$user_token@github.com/shrinilthakkar/p2ee.git/ gh-pages
+      git push -u -f https://$user:$user_token@github.com/moengagee/p2ee.git/ gh-pages
     fi
