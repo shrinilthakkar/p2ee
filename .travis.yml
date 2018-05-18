@@ -35,8 +35,10 @@ script:
   - pip install -U sphinx
   - git checkout -b gh-pages
   - pwd
-  - sphinx-apidoc -o /sphinx/rst/ /p2ee/
-  - sphinx-apidoc -o /sphinx/rst/ /sphinx/scripts/
+  - ls
+  - ls ./sphinx
+  - sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
+  - sphinx-apidoc -o ./sphinx/rst/ ./sphinx/scripts/
   - sphinx-build -b html sphinx/rst/ sphinx/html/
   - cp -R ./sphinx/html/* .
   - git config --global user.name "ghpages"
