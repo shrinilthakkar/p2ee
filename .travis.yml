@@ -30,5 +30,5 @@ script:
       git config --global user.email "ghpages@moengage.com"
       git add .
       git commit -am "generating documentation"
-      git push -u -f https://$user:$user_token@github.com/moengage/p2ee.git/ gh-pages
+      git push -u -f https://$user:$user_token@github.com/shrinilthakkar/p2ee.git/ gh-pages
     fi
