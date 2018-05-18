@@ -16,6 +16,7 @@ import os
 import sys
 from os.path import dirname as up
 code_path = os.path.join(up(up(__file__)), 'p2ee')
+print "**************  "+ code_path
 sys.path.append(code_path)
 
 
