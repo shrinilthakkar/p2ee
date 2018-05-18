@@ -15,7 +15,7 @@ before_script:
   - pip install coverage
   - pip install nosexcover
 #  - python setup.py install
-#  - python setup.py test
+#   - python setup.py test
   - nosetests -s ./tests/
 
 script:
