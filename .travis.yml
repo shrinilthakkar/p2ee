@@ -37,8 +37,8 @@ script:
   - pwd
   - ls
   - ls ./sphinx
-  - sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
   - sphinx-apidoc -o ./sphinx/rst/ ./sphinx/scripts/
+  - sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
   - sphinx-build -b html sphinx/rst/ sphinx/html/
   - cp -R ./sphinx/html/* .
   - git config --global user.name "ghpages"
