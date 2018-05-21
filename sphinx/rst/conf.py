@@ -17,7 +17,6 @@ import sys
 from os.path import dirname as up
 code_path = os.path.join(up(up(up(__file__))), '')
 sys.path.append(code_path)
-print code_path + "$$$$$$$$$"
 
 # -- Project information -----------------------------------------------------
 
@@ -42,11 +41,7 @@ release = '0.0.1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.githubpages',
+    'sphinx.ext.viewcode'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
