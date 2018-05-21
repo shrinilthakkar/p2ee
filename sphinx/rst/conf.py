@@ -45,7 +45,6 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.coverage', 
     'sphinx.ext.doctest',
-    'sphinx.ext.linkcode',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosectionlabel'
