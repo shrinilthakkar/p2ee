@@ -15,7 +15,7 @@
 import os
 import sys
 from os.path import dirname as up
-code_path = os.path.join(up(up(up(__file__))), 'p2ee/__init__.py')
+code_path = os.path.join(up(up(up(__file__))), '')
 sys.path.append(code_path)
 print code_path + "$$$$$$$$$"
 
