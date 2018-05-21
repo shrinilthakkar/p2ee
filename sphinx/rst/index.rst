@@ -2,11 +2,10 @@ Welcome to P2EE's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    p2ee
-   p2ee/folder1
 
 Indices
 ==================
