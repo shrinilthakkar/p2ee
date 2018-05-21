@@ -1,3 +1,4 @@
+import example
 """
 A Sphinx example and cheat sheet.
 
