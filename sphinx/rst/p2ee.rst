@@ -4,10 +4,10 @@ p2ee package
 Submodules
 ----------
 
-.. toctree::
-   :maxdepth: 4
-
-   folder1
+.. automodule:: folder1
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 p2ee.example module
 -------------------
