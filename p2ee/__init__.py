@@ -1,1 +1,1 @@
-import example
+from p2ee import example
