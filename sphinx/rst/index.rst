@@ -6,7 +6,7 @@ Welcome to P2EE's documentation!
    :caption: Contents:
 
    p2ee
-   p2ee/*
+   p2ee/folder1
 
 Indices
 ==================
