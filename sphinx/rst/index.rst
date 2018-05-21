@@ -5,7 +5,7 @@ Welcome to P2EE's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   .. automodule:: p2ee
+   p2ee
 
 Indices
 ==================
