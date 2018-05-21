@@ -23,9 +23,9 @@ script:
     if [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
       pip install -U sphinx
       git checkout -b gh-pages
-      -b coverage
       sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
       sphinx-build -b html ./sphinx/rst/ ./sphinx/html/
+      sphinx-build -b coverage ./p2ee/ ./sphinx/html/
       cp -R ./sphinx/html/* .
       git config --global user.name "ghpages"
       git config --global user.email "ghpages@moengage.com"
