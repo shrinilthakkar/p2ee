@@ -1,2 +1,2 @@
 __import__('pkg_resources').declare_namespace(__name__)
-import folder1.*
+import folder1.hell
