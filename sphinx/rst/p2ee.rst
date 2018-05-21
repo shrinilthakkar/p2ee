@@ -4,7 +4,7 @@ module package
 Module contents
 ---------------
 
-.. automodule:: module
+.. automodule:: p2ee
     :members:
     :undoc-members:
     :show-inheritance:
