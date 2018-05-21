@@ -18,6 +18,7 @@ from os.path import dirname as up
 code_path = os.path.join(up(up(up(__file__))), '')
 sys.path.append(code_path)
 
+
 # -- Project information -----------------------------------------------------
 
 project = 'P2EE'
