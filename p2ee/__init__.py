@@ -1,1 +1,1 @@
-from p2ee import example
+import p2ee.example.*
