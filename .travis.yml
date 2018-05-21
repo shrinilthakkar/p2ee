@@ -23,6 +23,7 @@ script:
     if [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
       pip install -U sphinx
       git checkout -b gh-pages
+      sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
       sphinx-apidoc -o ./sphinx/rst/ ./p2ee/folder/
       sphinx-build -b html ./sphinx/rst/ ./sphinx/html/
       cp -R ./sphinx/html/* .
