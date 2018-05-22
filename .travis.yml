@@ -16,7 +16,8 @@ before_script:
   - pip install nosexcover
 #  - python setup.py install
 #  - python setup.py test
-  - nosetests --cover-html-dir=./coverage/ -s ./tests/
+#  - nosetests --cover-html-dir=./coverage/ -s ./tests/
+  - nosetests -s ./tests/
 
 script:
   - |
