@@ -16,16 +16,13 @@ before_script:
   - pip install nosexcover
 #  - python setup.py install
 #  - python setup.py test
-  - nosetests --cover-html-dir=./sphinx/ -s ./tests/
+  - nosetests --cover-html-dir=. -s ./tests/
 
 script:
   - |
     if [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
       pip install -U sphinx
       git checkout -b gh-pages
-      echo "@@@@@@@@@@@@@@"
-      sphinx-build -v -b coverage ./sphinx/rst/ ./sphinx/
-      echo "@@@@@@@@@@@@@@"
       sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
       sphinx-build -b html ./sphinx/rst/ ./sphinx/html/
       cp -R ./sphinx/html/* .
