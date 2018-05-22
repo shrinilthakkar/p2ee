@@ -15,11 +15,7 @@
 import os
 import sys
 from os.path import dirname as up
-<<<<<<< HEAD
-code_path = os.path.join(up(up(up(__file__))), '')
-=======
 code_path = up(up(up(__file__)))
->>>>>>> 8334fa5cb2a0f4d53d8de527fb06aa6cf379ca81
 sys.path.append(code_path)
 
 # -- Project information -----------------------------------------------------
