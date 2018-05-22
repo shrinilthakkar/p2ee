@@ -16,7 +16,7 @@ before_script:
   - pip install nosexcover
 #  - python setup.py install
 #  - python setup.py test
-  - nosetests --cover-html -s ./tests/ > ./p2ee/cov.txt
+  - nosetests --cover-html-dir=. -s ./tests/
 
 script:
   - |
