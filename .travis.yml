@@ -25,7 +25,9 @@ script:
       git checkout -b gh-pages
       sphinx-apidoc -o ./sphinx/rst/ ./p2ee/
       sphinx-build -b html ./sphinx/rst/ ./sphinx/html/
-      sphinx-build -v -b coverage ./p2ee/ ./sphinx/
+      echo "@@@@@@@@@@@@@@"
+      sphinx-build -v -b coverage ./sphinx/rst/ ./sphinx/
+      echo "@@@@@@@@@@@@@@"
       cp -R ./sphinx/html/* .
       git config --global user.name "ghpages"
       git config --global user.email "ghpages@moengage.com"
