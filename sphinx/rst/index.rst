@@ -6,6 +6,9 @@ Welcome to P2EE's documentation!
    :caption: Contents:
 
    modules
+   
+.. raw:: html
+   :file: ../../coverage/index.html
 
 Indices
 ==================
