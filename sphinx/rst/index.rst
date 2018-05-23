@@ -7,8 +7,9 @@ Welcome to P2EE's documentation!
 
    modules
 
-`Coverage Reports
-<https://shrinilthakkar.github.io/p2ee/coverage/index.html>`_.
+   :caption: Coverage:
+   `Coverage Reports
+   <https://shrinilthakkar.github.io/p2ee/coverage/index.html>`_.
 
 
 Indices
