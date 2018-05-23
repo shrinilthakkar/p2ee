@@ -7,7 +7,7 @@ Welcome to P2EE's documentation!
 
    modules
    
-   </coverage>
+   `</coverage/index.html>`
 
 Indices
 ==================
