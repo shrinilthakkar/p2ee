@@ -7,7 +7,7 @@ Welcome to P2EE's documentation!
 
    modules
 
-   Coverage `Reports
+   `Coverage Reports
    <https://shrinilthakkar.github.io/p2ee/coverage/index.html>`_.
 
 
