@@ -7,7 +7,11 @@ Welcome to P2EE's documentation!
 
    modules
    
-   `</coverage/index.html>`_
+.. role:: raw-html(raw)
+   :format: html
+   
+   <h1>Coverage Reports</h1>
+   <a href="https://shrinilthakkar.github.io/p2ee/coverage/index.html">Coverage link</a>
 
 Indices
 ==================
