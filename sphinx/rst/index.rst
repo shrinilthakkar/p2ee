@@ -7,8 +7,8 @@ Welcome to P2EE's documentation!
 
    modules
    
-.. raw:: html
-   :url: https://shrinilthakkar.github.io/p2ee/coverage/index.html
+.. meta::
+   :http-equiv="https://shrinilthakkar.github.io/p2ee/coverage/index.html" Content-Type: text/html; charset=ISO-8859-1
 
 Indices
 ==================
