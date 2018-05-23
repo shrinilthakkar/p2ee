@@ -7,7 +7,7 @@ Welcome to P2EE's documentation!
 
    modules
    
-   `https://shrinilthakkar.github.io/p2ee/coverage`_
+   `Coverage <https://shrinilthakkar.github.io/p2ee/coverage>`_
 
 Indices
 ==================
