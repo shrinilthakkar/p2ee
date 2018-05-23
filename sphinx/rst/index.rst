@@ -10,7 +10,6 @@ Welcome to P2EE's documentation!
 `Coverage Reports
 <https://moengage.github.io/p2ee/coverage/index.html>`_.
 
-
 Indices
 ==================
 
