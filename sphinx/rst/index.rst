@@ -8,7 +8,7 @@ Welcome to P2EE's documentation!
    modules
    
 .. raw:: html
-   :file: ../../coverage/index.html
+   :url: https://shrinilthakkar.github.io/p2ee/coverage/index.html
 
 Indices
 ==================
