@@ -6,6 +6,8 @@ Welcome to P2EE's documentation!
    :caption: Contents:
 
    modules
+   
+   `local mirror <../../coverage/index.html>`_
 
 Indices
 ==================
