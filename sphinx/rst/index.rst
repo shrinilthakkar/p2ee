@@ -12,6 +12,8 @@ Welcome to P2EE's documentation!
    
    <h1>Coverage Reports</h1>
    <a href="https://shrinilthakkar.github.io/p2ee/coverage/index.html">Coverage link</a>
+   
+   :RFC:`coverage` for information about email headers.
 
 Indices
 ==================
