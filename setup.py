@@ -1,7 +1,7 @@
 # Always prefer setuptools over distutils
 from codecs import open
 from setuptools import setup, find_packages
-import pip
+#import pip
 
 package_name = 'p2ee'
 
@@ -30,7 +30,7 @@ print "**************************************************"
 print "Installing package: " + package_name + " version: " + package_version
 print "**************************************************"
 
-pip.main(['install', '-r', 'requirements.txt'])
+#pip.main(['install', '-r', 'requirements.txt'])
 
 setup(
     name=package_name,
