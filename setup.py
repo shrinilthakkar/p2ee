@@ -30,6 +30,7 @@ print "**************************************************"
 print "Installing package: " + package_name + " version: " + package_version
 print "**************************************************"
 
+pip.main(['install', '-r', 'requirements.txt'])
 
 setup(
     name=package_name,
