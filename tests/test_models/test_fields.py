@@ -1,13 +1,11 @@
-from copy import deepcopy
 import json
 from nose_parameterized import parameterized
 import six
-import types
 from unittest import TestCase
 
-from p2ee.models.base import SimpleDocument
-from p2ee.models.fields import IntField, EmailField, DictField, ListField, StringField
-from p2ee.models.exceptions import InvalidFieldValueException
+from p2ee.orm.models.base import SimpleDocument
+from p2ee.orm.models.base.fields import IntField, EmailField, DictField, ListField, StringField
+from p2ee.orm.models.exceptions import InvalidFieldValueException
 
 
 class TestSimpleDocument(TestCase):
