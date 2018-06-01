@@ -1,8 +1,10 @@
 from threading import Lock
 
 from p2ee.utils.dict_utils import DictUtils
-from p2ee.orm.models.base.fields import BaseField
+from p2ee.orm.models.base.fields import BaseField, ObjectIdField
 from p2ee.orm.models.exceptions import InvalidFieldValueException, InvalidFieldException
+
+__all__ = ('SimpleDocument', 'SimpleSchemaDocument', 'SchemalessDocument', 'SchemaDocument')
 
 
 class DocumentMetaClass(type):
@@ -209,3 +211,27 @@ class SimpleDocument(object):
 
 class SimpleSchemaDocument(SimpleDocument):
     _schema_flexible = False
+
+
+class SchemalessDocument(SimpleDocument):
+    _id = ObjectIdField()
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
+
+
+class SchemaDocument(SimpleSchemaDocument):
+    _id = ObjectIdField()
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
