@@ -6,6 +6,7 @@ import sys
 from p2ee.utils.package_utils import PackageUtils
 from p2ee.utils.dict_utils import DictUtils
 
+
 class CommonUtils(DictUtils):
 
     @staticmethod

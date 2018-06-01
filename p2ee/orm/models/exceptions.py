@@ -36,7 +36,7 @@ class InvalidFieldValueException(Exception):
 
 
 class InvalidFieldDefinition(Exception):
-    def __init__(self, message='Invalid Field Definition', field=None):
+    def __init__(self, message='Invalid field definition', field=None):
         self.field = field
         super(InvalidFieldDefinition, self).__init__(message + ': ' + str(field))
 

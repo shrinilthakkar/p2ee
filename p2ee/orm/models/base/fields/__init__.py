@@ -1,6 +1,7 @@
 from abc import ABCMeta
 
-from p2ee.models.exceptions import InvalidFieldValueException, InvalidFieldDefinition
+from p2ee.orm.models.exceptions import InvalidFieldValueException, InvalidFieldDefinition
+
 
 class BaseField(object):
     __metaclass__ = ABCMeta

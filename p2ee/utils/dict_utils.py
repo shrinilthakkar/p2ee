@@ -21,40 +21,44 @@ class DictUtils(object):
     @classmethod
     def to_json(cls, dictionary, **kwargs):
         try:
-            return json.dumps(dictionary, default=cls.serializable, **kwargs)
+            return json.dumps(dictionary, default=cls.orm_serialize, **kwargs)
         except TypeError:
             return cls.to_json(cls.to_serializable_dict(dictionary), **kwargs)
 
     @classmethod
     def to_serializable_dict(cls, dictionary, serializer=None):
-        serializer = serializer or cls.serializable
+        serializer = serializer or cls.orm_serialize
         return {
             serializer(k, serializer=serializer): serializer(v, serializer=serializer)
             for k, v in dictionary.items()
         }
 
     @classmethod
-    def serializable(cls, o, serializer=None):
-        from p2ee.serializable import SerializableObject
-        serializer = serializer or cls.serializable
+    def json_serialize(cls, o, serializer=None):
+        serializer = serializer or cls.json_serialize
         if isinstance(o, (Enum, ObjectId, timedelta)):
             return str(o)
         elif isinstance(o, datetime):
             return o.isoformat()
-        # Check if o is an instance of a python class
-        elif hasattr(o, '__name__'):
-            return {k[1:] if k.startswith('_') else k: v for k, v in o.__dict__.items() if v}
         elif isinstance(o, dict):
             return {
                 serializer(key, serializer=serializer): serializer(value, serializer=serializer)
                 for key, value in o.items()
             }
         elif isinstance(o, (list, set)):
-            serialized = list()
-            for item in o:
-                serialized.append(serializer(item, serializer=serializer))
-            return serialized
-        elif isinstance(o, SerializableObject):
-            return o.to_dict()
+            return map(lambda item: serializer(item, serializer=serializer), o)
         else:
             return o
+
+    @classmethod
+    def orm_serialize(cls, o):
+        from p2ee.orm.models.base import SimpleDocument
+        from p2ee.orm.models.base.fields import BaseField
+        if isinstance(o, SimpleDocument):
+            return o.to_dict()
+        elif isinstance(o, BaseField):
+            return o.default
+        elif isinstance(o, (datetime, ObjectId, Enum)):
+            return o
+        else:
+            return cls.json_serialize(o)

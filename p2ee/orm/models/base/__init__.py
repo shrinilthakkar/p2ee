@@ -1,7 +1,8 @@
 from threading import Lock
-from enum import Enum
-from p2ee.models.fields import BaseField
-from p2ee.models.exceptions import InvalidFieldValueException, InvalidFieldException
+
+from p2ee.utils.dict_utils import DictUtils
+from p2ee.orm.models.base.fields import BaseField
+from p2ee.orm.models.exceptions import InvalidFieldValueException, InvalidFieldException
 
 
 class DocumentMetaClass(type):
@@ -157,29 +158,13 @@ class SimpleDocument(object):
         except UnicodeEncodeError:
             super(SimpleDocument, self).__setattr__(key.encode("utf-8"), value)
 
-    def __serialize(self, v):
-        serialized = v
-        if isinstance(v, SimpleDocument):
-            serialized = v.to_dict()
-        elif isinstance(v, BaseField):
-            serialized = v.default
-        elif isinstance(v, Enum):
-            serialized = str(v)
-        elif isinstance(v, dict):
-            serialized = {key: self.__serialize(value) for key, value in v.items()}
-        elif isinstance(v, list) or isinstance(v, set):
-            serialized = list()
-            for item in v:
-                serialized.append(self.__serialize(item))
-        return serialized
-
     def to_dict(self):
         """ Convert the document into a dictionary which can be saved
         :return: Dictionary with filtered fields to be saved in mongo
         """
         ret_dict = {}
         for key, val in self.__dict__.items():
-            set_value = self.__serialize(val)
+            set_value = DictUtils.orm_serialize(val)
             if set_value is None:
                 continue
             schema_key = self.__get_key(key)
@@ -192,8 +177,7 @@ class SimpleDocument(object):
         """ JSON serialize the to_dict representation of the document
         :return: JSON String
         """
-        from p2ee.utils.common_utils import CommonUtils
-        return CommonUtils.to_json(self.to_dict())
+        return DictUtils.to_json(self.to_dict())
 
     def copy(self, **kwargs):
         class_dict = self.to_dict()
