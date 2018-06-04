@@ -145,7 +145,7 @@ class StringField(BaseField):
             raise InvalidFieldValueException('String value did not match validation regex',
                                              field=self.field_name, value=value)
 
-        return super(StringField, self).validate(value, field=self.field_name)
+        return super(StringField, self).validate(value)
 
 
 class ObjectIdField(BaseField):
