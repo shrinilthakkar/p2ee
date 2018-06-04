@@ -14,7 +14,12 @@ class DocumentMetaClass(type):
         # Load the class
         super(DocumentMetaClass, cls).__init__(cls, bases, dictionary)
         # Set schema on class from class variables - Only BaseField allowed
-        cls._schema = {k: v for k, v in dictionary.items() if isinstance(v, BaseField)}
+        # cls._schema = {k: v for k, v in dictionary.items() if isinstance(v, BaseField)}
+        cls._schema = {}
+        for k, v in dictionary.items():
+            if isinstance(v, BaseField):
+                v.field_name = k
+                cls._schema[k] = v
         # All class schemas are default flexible unless explicitly disabled
         cls._schema_flexible = schema_flexible
         cls._schema_lock = Lock()
@@ -154,7 +159,7 @@ class SimpleDocument(object):
         self.__check_and_set_schema(schema_key, schema=value)
         schema = self.get_schema(schema_key)
         if schema and isinstance(schema, BaseField):
-            value = schema.validate(value, field=key)
+            value = schema.validate(value)
         try:
             super(SimpleDocument, self).__setattr__(key, value)
         except UnicodeEncodeError:
