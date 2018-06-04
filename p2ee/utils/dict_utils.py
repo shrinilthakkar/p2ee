@@ -3,8 +3,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from bson.objectid import ObjectId
 
-from p2ee.orm.models.base import SimpleDocument
-
 
 class DictUtils(object):
 
@@ -40,8 +38,6 @@ class DictUtils(object):
         serializer = serializer or cls.json_serialize
         if isinstance(o, (Enum, ObjectId, timedelta)):
             return str(o)
-        elif isinstance(o, SimpleDocument):
-            return o.to_dict()
         elif isinstance(o, datetime):
             return o.isoformat()
         elif isinstance(o, dict):
