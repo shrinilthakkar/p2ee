@@ -1,179 +1,105 @@
 import datetime
-import grp
 import logging.handlers
 import os
-import pwd
 import threading
 import traceback
+import sys
+from threading import Lock
 
-from enum import Enum
-
+from p2ee.orm.models.enum_type import StringEnum
+from p2ee.utils.package_utils import PackageUtils
+from p2ee.orm.models.base.fields import IntField, EnumField, StringField
+from p2ee.singleton import NamedInstanceMetaClass
+from p2ee.utils.loggers.provider import LogConfigProvider
 from p2ee.orm.models.base import SimpleSchemaDocument
 from p2ee.utils.context.thread import ThreadContext
 from p2ee.utils.context import GLOBAL_CONTEXT
 from p2ee.utils.common_utils import CommonUtils
 
 
-class LogFormat(Enum):
-    TEXT = 1
-    JSON = 2
+class LogFormat(StringEnum):
+    TEXT = "text"
+    JSON = "json"
 
-    def __str__(self):
+    def get_formatter(self):
         return {
-            LogFormat.TEXT: "text",
-            LogFormat.JSON: "json"
+            LogFormat.TEXT: "%(threadName)s-%(asctime)s [%(levelname)s] - %(message)s",
+            LogFormat.JSON: "%(message)s"
         }.get(self)
-
-    @staticmethod
-    def fromStr(value):
-        return {
-            "text": LogFormat.TEXT,
-            "json": LogFormat.JSON
-        }.get(value)
 
 
 class LoggingConfig(SimpleSchemaDocument):
-    def __init__(self, **kwargs):
-        """
-            Structure for treysor logging
-            log_levels = [logging.ERROR,logging.WARNING,logging.INFO,logging.DEBUG]
-            log_level is index of log level from this string
-            EXCEPTION = ERROR
-        """
-        self._log_level = 2
-        self._filename = self.get_default_filename()
-        self.when = "D"
-        self.interval = 1
-        self.backup_count = 7
-        self.log_format = LogFormat.JSON
-        super(LoggingConfig, self).__init__(**kwargs)
+    file_path = StringField()
+    log_level = IntField(min_value=logging.DEBUG, max_value=logging.CRITICAL,
+                         choices=[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL],
+                         default=LogConfigProvider().get_log_level())
+    log_format = EnumField(enum_class=LogFormat, default=LogFormat.JSON)
+    log_type = StringField()
+    domain = StringField(choices=set(LogConfigProvider().get_domains()),
+                         default='unknown')
 
-    @classmethod
-    def get_default_filename(cls):
-        pid = str(os.getpid())
-        log_file_path = '/var/log/treysor/treysor_pid.log'
-        return log_file_path.replace("pid", pid)
+    @staticmethod
+    def get_domain_from_log_type(domain):
+        return domain.split('.')[0]
 
-    @property
-    def log_level(self):
-        return self._log_level
-
-    @log_level.setter
-    def log_level(self, log_level_index):
-        log_levels = [
-            logging.ERROR,
-            logging.WARNING,
-            logging.INFO,
-            logging.DEBUG
-        ]
-        self._log_level = log_levels[log_level_index]
-
-    @property
-    def filename(self):
-        return self._filename
-
-    @filename.setter
-    def filename(self, filename):
-        if filename is None:
-            filename = self.get_default_filename()
-        self._filename = filename
-
-    @classmethod
-    def required_fields(cls):
-        return ['log_level', 'filename', 'when', 'interval', 'backup_count']
-
-    def validate_schema_document(self, invalid_fields=None):
-        invalid_fields = invalid_fields or []
-        for key in self.required_fields():
-            if not self[key]:
-                invalid_fields.append(key)
-        super(LoggingConfig, self).validate_schema_document(invalid_fields=invalid_fields)
-
-
-class TreysorMeta(type):
-    def __init__(cls, name, bases, dictionary):
-        super(TreysorMeta, cls).__init__(cls, bases, dictionary)
-        cls._loggers = {}
-        cls._lock = threading.Lock()
-        # create global context - doesnt change for a single running process
-        cls._default_context = GLOBAL_CONTEXT
-
-    def __call__(cls, *args, **kwargs):
-        """
-        Called before each logger instance creation
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        # Get domain name from logger constructor - defaults to commons
-        domain = kwargs.get('domain', args[0] if args else 'moengage_commons')
-        # try to get any existing logger for this domain
-        logger = cls._loggers.get(domain)
-        if not logger:
-            with cls._lock:
-                if not cls._loggers.get(domain):
-                    # If logger not found, create one
-                    logger = super(TreysorMeta, cls).__call__(*args, **kwargs)
-                    cls._loggers[domain] = logger
-                else:
-                    logger = cls._loggers.get(domain)
-        return logger
-
-    @classmethod
-    def setup_logger(mcs, logger, logging_config):
-        log_file_path = logging_config['filename']
-        log_directory = os.path.dirname(log_file_path)
-        if not os.path.exists(log_directory):
-            os.makedirs(log_directory)
-            os.chmod(log_directory, 0o764)
-            os.chown(log_directory, pwd.getpwnam("ubuntu").pw_uid, grp.getgrnam("syslog").gr_gid)
-        if logging_config.get('log_format') == str(LogFormat.TEXT):
-            formatter = logging.Formatter('%(threadName)s-%(asctime)s [%(levelname)s] - %(message)s')
+    def get_logging_base_path(self):
+        if PackageUtils.isVirtualEnv():
+            log_folder_path = sys.prefix
+        elif PackageUtils.isLambdaEnv():
+            log_folder_path = '/var/task'
         else:
-            formatter = logging.Formatter("%(message)s")
-        file_handler = logging.handlers.WatchedFileHandler(filename=log_file_path)
-        # file_handler = logging.handlers.TimedRotatingFileHandler(log_file_path, when=logging_config['when'],
-        #                                                          interval=logging_config['interval'],
-        #                                                          backupCount=logging_config['backup_count'])
-        stream_handler = logging.StreamHandler()
-        file_handler.setFormatter(formatter)
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-        if CommonUtils.getEnv() != 'prod':
-            logger.addHandler(stream_handler)
-        return logger
+            log_folder_path = '/var/log'
+        return os.path.join(log_folder_path, 'treysor')
 
-    @classmethod
-    def setup_logging(mcs, logger_name, logging_config):
-        # configure root logger
-        log_level = logging_config['log_level']
-        logger = logging.getLogger(logger_name)
-        logger.setLevel(log_level)
-        return mcs.setup_logger(logger, logging_config)
+    def get_file_path(self):
+        if self.file_path is None:
+            self.file_path = "{base_path}/{domain}/{pid}.log".format(
+                base_path=self.get_logging_base_path(),
+                domain=str(self.domain),
+                pid=str(GLOBAL_CONTEXT['pid'])
+            )
+        return self.file_path
 
 
 class Treysor(object):
-    __metaclass__ = TreysorMeta
+    __metaclass__ = NamedInstanceMetaClass
+    INSTANCE_NAME_INIT_ARG = 'log_type'
+    SETUP_LOCK = Lock()
 
-    def __init__(self, domain='moengage_commons', logging_config=None):
-        """
-        Initialized only once per domain - handled in metaclass
-        :param domain: MoEngage internal domains eg - segmentation, commons, inapps etc
-        """
-        self._logger = logging.getLogger(domain)
-        self._domain = domain
-        self._log_format = LogFormat.JSON
-        # Each thread maintains a separate context (A context per thread per domain).
-        # _context is a dictionary that maintains all those contexts
-        # when reading context, current thread which is trying to read context is checked, and context for only that
-        # thread is returned - Check ThreadContext class
-        self._context = ThreadContext(LogType=self._domain, domain=self._domain, **self._default_context)
-        treysor_logging_conf = LoggingConfig().to_dict()
-        if logging_config and isinstance(logging_config, LoggingConfig):
-            self._log_format = logging_config.log_format
-            treysor_logging_conf = CommonUtils.deepMergeDictionaries(LoggingConfig().to_dict(),
-                                                                     logging_config.to_dict())
-        TreysorMeta.setup_logging(domain, treysor_logging_conf)
+    def __init__(self, log_type='commons', logging_config=None):
+        domain = LoggingConfig.get_domain_from_log_type(log_type)
+        self.logging_config = logging_config or LoggingConfig(log_type=log_type, domain=domain)
+        self._context = ThreadContext(
+            log_type=self.logging_config.log_type,
+            log_domain=str(self.logging_config.domain),
+            **GLOBAL_CONTEXT
+        )
+        self._logger = self.setup_logger(logging_config=self.logging_config)
+
+    @classmethod
+    def setup_logger(cls, logging_config):
+        logger = logging.getLogger(str(logging_config.log_type))
+        with cls.SETUP_LOCK:
+            formatter = logging.Formatter(logging_config.log_format.get_formatter())
+            logger.setLevel(logging_config.log_level)
+            if not PackageUtils.isLambdaEnv():
+                log_file_path = logging_config.get_file_path()
+                CommonUtils.ensure_folder_path(log_file_path, 0o776, owner=LogConfigProvider().get_log_dir_owner(),
+                                               group=LogConfigProvider().get_log_dir_group())
+
+                for handler in logger.handlers:
+                    logger.removeHandler(handler)
+
+                file_handler = logging.handlers.WatchedFileHandler(filename=log_file_path)
+                file_handler.setFormatter(formatter)
+                logger.addHandler(file_handler)
+
+            if CommonUtils.getEnv() != 'prod' or PackageUtils.isLambdaEnv():
+                stream_handler = logging.StreamHandler()
+                stream_handler.setFormatter(formatter)
+                logger.addHandler(stream_handler)
+
+        return logger
 
     def updateContext(self, **kwargs):
         """
@@ -227,14 +153,19 @@ class Treysor(object):
         :return:
         """
         message = ""
-        if self._log_format == LogFormat.TEXT:
+        # The parameter `3` to `getFunctionCallerInfo` indicates the nesting level of the _getframe call made.
+        # _getframe returns the frame `n` levels above the current frame (from where _getframe is called)
+        # In our case _getframe is called inside getFunctionCallerInfo. This call to _getframe is 3 levels nested
+        # wrt to the point where the log statement was actually added.
+        # The 3 nesting levels are -> treysor().info --> __get_log_message --> getFunctionCallerInfo --> _getframe
+        if self.logging_config.log_format == LogFormat.TEXT:
             caller_info = CommonUtils.getFunctionCallerInfo(3)
             line_info = ""
             if 'func_call_info' in caller_info:
                 file_info = caller_info['func_call_info'].split('@')
                 if len(file_info) >= 2:
                     line_info = file_info[1]
-            message = "[" + CommonUtils.convertCodePathToDotNotation(line_info) + ": " + \
+            message += "[" + CommonUtils.convertCodePathToDotNotation(line_info) + ": " + \
                       threading.currentThread().name + "] " + kwargs.get('treysor_log_msg', "") + \
                       "\n" + kwargs.get("exception", "")
         else:
@@ -249,7 +180,7 @@ class Treysor(object):
             log_dict['log_timestamp'] = datetime.datetime.utcnow()
             # Add realtime log line params
             log_dict.update(kwargs)
-            message = self.to_json(log_dict)
+            message += self.to_json(log_dict)
         return message
 
     def get_formatted_treysor_log_msg(self, treysor_log_msg, *args):
@@ -312,28 +243,19 @@ class Treysor(object):
 
     @property
     def correlationId(self):
-        return self._default_context.get('correlationId')
+        return GLOBAL_CONTEXT.get('corr_id')
 
     @property
     def pid(self):
-        return self._default_context.get('pid')
+        return GLOBAL_CONTEXT.get('pid')
 
     @property
     def host(self):
-        return self._default_context.get('host')
+        return GLOBAL_CONTEXT.get('host')
 
     @property
     def domain(self):
-        return self._domain
+        return self.logging_config.domain
 
     def update_logging_config(self, logging_config):
-        with self._lock:
-            self._log_format = logging_config.log_format
-            logger = logging.getLogger(self._domain)
-            for handler in logger.handlers:
-                logger.removeHandler(handler)
-            treysor_logging_conf = LoggingConfig().to_dict()
-            if logging_config and isinstance(logging_config, LoggingConfig):
-                treysor_logging_conf = CommonUtils.deepMergeDictionaries(LoggingConfig().to_dict(),
-                                                                         logging_config.to_dict())
-            TreysorMeta.setup_logger(logger, treysor_logging_conf)
+        self._logger = self.setup_logger(logging_config)
