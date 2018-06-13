@@ -1,6 +1,4 @@
 # Always prefer setuptools over distutils
-from codecs import open
-
 from setuptools import setup, find_packages
 
 package_name = 'p2ee'
@@ -29,7 +27,6 @@ test_dependencies = [
 print "**************************************************"
 print "Installing package: " + package_name + " version: " + package_version
 print "**************************************************"
-
 
 setup(
     name=package_name,
