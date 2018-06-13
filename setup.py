@@ -1,4 +1,5 @@
 # Always prefer setuptools over distutils
+from codecs import open
 from setuptools import setup, find_packages
 
 package_name = 'p2ee'

@@ -8,9 +8,10 @@ import traceback
 
 from enum import Enum
 
-from p2ee.threadsafe import ThreadContext, GLOBAL_CONTEXT
+from p2ee.orm.models.base import SimpleSchemaDocument
+from p2ee.utils.context.thread import ThreadContext
+from p2ee.utils.context import GLOBAL_CONTEXT
 from p2ee.utils.common_utils import CommonUtils
-from p2ee.models.base import SimpleSchemaDocument
 
 
 class LogFormat(Enum):
