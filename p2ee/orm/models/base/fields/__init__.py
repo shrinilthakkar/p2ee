@@ -10,6 +10,9 @@ from enum import Enum
 
 from p2ee.orm.models.exceptions import InvalidFieldValueException, InvalidFieldDefinition, InvalidFieldException
 
+__all__ = ('BaseField', 'StringField', 'IntField', 'EmailField', 'ObjectIdField', 'ListField', 'DictField',
+           'EmbeddedField', 'BooleanField', 'EnumField', 'DBNameField', 'DateTimeField', 'FloatField')
+
 
 class BaseField(object):
     __metaclass__ = ABCMeta
@@ -35,7 +38,7 @@ class BaseField(object):
         """Default value for the field"""
         value = self._default if not callable(self._default) else self._default()
         if self.required and value is None:
-            raise InvalidFieldValueException(message='Field is required but value is None')
+            raise InvalidFieldValueException(message='Field is required but value is None', field=self.field_name)
         return value
 
     @property
@@ -51,14 +54,20 @@ class BaseField(object):
     def field_name(self):
         return self._field_name
 
-    def validate(self, value, field=None):
+    @field_name.setter
+    def field_name(self, name):
+        """The default value for this field is the key name if set from the model using it"""
+        if self._field_name is None:
+            self._field_name = name
+
+    def validate(self, value):
         """Derived class should override this method and add extra validation logic."""
         if self.required and value is None:
             raise InvalidFieldValueException('Value cannot be None',
-                                             field=field, value=value)
+                                             field=self.field_name, value=value)
         if self.choices is not None and value not in self.choices:
             raise InvalidFieldValueException('Value must be one of the permitted values',
-                                             field=field, value=value)
+                                             field=self.field_name, value=value)
 
         return value
 
@@ -67,6 +76,40 @@ class BaseField(object):
         if validator and not isinstance(validator, BaseField):
             raise InvalidFieldDefinition("Element Validator should be an instance of BaseField: %r" % validator)
         return validator
+
+
+class BoundedField(BaseField):
+    def __init__(self, min_value=None, max_value=None, **kwargs):
+        self._min_value = min_value
+        self._max_value = max_value
+        super(BoundedField, self).__init__(**kwargs)
+
+    @property
+    def min_value(self):
+        return self._min_value() if callable(self._min_value) else self._min_value
+
+    @property
+    def max_value(self):
+        return self._max_value() if callable(self._max_value) else self._max_value
+
+    def _min_check(self, value):
+        min_value = self.min_value
+        if min_value is not None and value < min_value:
+            raise InvalidFieldValueException('Value is less than min value', field=self.field_name, value=value)
+
+    def _max_check(self, value):
+        max_value = self.max_value
+        if max_value is not None and value > max_value:
+            raise InvalidFieldValueException('Value is greater than max value', field=self.field_name, value=value)
+
+    def _instance_check(self, value):
+        return value
+
+    def validate(self, value):
+        value = self._instance_check(value)
+        self._min_check(value)
+        self._max_check(value)
+        return super(BoundedField, self).validate(value)
 
 
 class StringField(BaseField):
@@ -87,38 +130,38 @@ class StringField(BaseField):
 
         super(StringField, self).__init__(**kwargs)
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         if not isinstance(value, six.string_types):
             raise InvalidFieldValueException('Value must be a string',
-                                             field=field, value=value)
+                                             field=self.field_name, value=value)
 
         if self.max_length is not None and len(value) > self.max_length:
-            raise InvalidFieldValueException('String value too long', field=field, value=value)
+            raise InvalidFieldValueException('String value too long', field=self.field_name, value=value)
 
         if self.min_length is not None and len(value) < self.min_length:
-            raise InvalidFieldValueException('String value too short', field=field, value=value)
+            raise InvalidFieldValueException('String value too short', field=self.field_name, value=value)
 
         if self.regex is not None and self.regex.match(value) is None:
             raise InvalidFieldValueException('String value did not match validation regex',
-                                             field=field, value=value)
+                                             field=self.field_name, value=value)
 
-        return super(StringField, self).validate(value, field=field)
+        return super(StringField, self).validate(value)
 
 
 class ObjectIdField(BaseField):
     def __init__(self, default=ObjectId, **kwargs):
         super(ObjectIdField, self).__init__(default=default, **kwargs)
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         if not isinstance(value, ObjectId):
             if isinstance(value, basestring) and len(value) == 24:
                 try:
                     value = ObjectId(value)
                 except InvalidId:
-                    raise InvalidFieldValueException('Value must be a valid ObjectId', field=field, value=value)
+                    raise InvalidFieldValueException('Value must be a valid ObjectId', field=self.field_name, value=value)
             else:
-                raise InvalidFieldValueException('Value must be a valid ObjectId', field=field, value=value)
-        return super(ObjectIdField, self).validate(value, field=field)
+                raise InvalidFieldValueException('Value must be a valid ObjectId', field=self.field_name, value=value)
+        return super(ObjectIdField, self).validate(value, field=self.field_name)
 
 
 class DBNameField(StringField):
@@ -133,7 +176,7 @@ class EnumField(BaseField):
             raise InvalidFieldException("Enum class %r must implement `fromStr` method" % self.enum_class)
         super(EnumField, self).__init__(choices=list(self.enum_class), **kwargs)
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         if not isinstance(value, self.enum_class):
             value_enum = self.enum_class.fromStr(value)
             if not value_enum:
@@ -143,41 +186,21 @@ class EnumField(BaseField):
         else:
             value_enum = value
 
-        return super(EnumField, self).validate(value=value_enum, field=field)
+        return super(EnumField, self).validate(value=value_enum, field=self.field_name)
 
 
-class IntField(BaseField):
+class IntField(BoundedField):
     """32-bit integer field.
 
     Default value: 0
     """
 
-    def __init__(self, min_value=None, max_value=None, **kwargs):
-        self.min_value = min_value
-        self.max_value = max_value
-
-        super(IntField, self).__init__(**kwargs)
-
-    def _instance_check(self, value, field=None):
+    def _instance_check(self, value):
         if isinstance(value, float) and value.is_integer():
             value = int(value)
         if not isinstance(value, (int, long)):
-            raise InvalidFieldValueException('Value must be an integer', field=field, value=value)
+            raise InvalidFieldValueException('Value must be an integer', field=self.field_name, value=value)
         return value
-
-    def _min_check(self, value, field=None):
-        if self.min_value is not None and value < self.min_value:
-            raise InvalidFieldValueException('Value is too small', field=field, value=value)
-
-    def _max_check(self, value, field=None):
-        if self.max_value is not None and value > self.max_value:
-            raise InvalidFieldValueException('Value is too large', field=field, value=value)
-
-    def validate(self, value, field=None):
-        value_int = self._instance_check(value, field=field)
-        self._min_check(value_int, field=field)
-        self._max_check(value_int, field=field)
-        return super(IntField, self).validate(value_int, field=field)
 
 
 class EmailField(StringField):
@@ -194,11 +217,11 @@ class EmailField(StringField):
         r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,253}[A-Z0-9])?\.)+[A-Z]{2,6}$', re.IGNORECASE
     )
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         if not EmailField.EMAIL_REGEX.match(value):
-            raise InvalidFieldValueException('Invalid email address', field=field, value=value)
+            raise InvalidFieldValueException('Invalid email address', field=self.field_name, value=value)
 
-        return super(EmailField, self).validate(value, field=field)
+        return super(EmailField, self).validate(value)
 
 
 class ListField(BaseField):
@@ -220,16 +243,16 @@ class ListField(BaseField):
         elif self.container_type is set:
             container.add(value)
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         """Make sure that a list of valid fields is being used."""
         if not isinstance(value, (list, tuple, set)):
             raise InvalidFieldValueException('Only lists and tuples may be used in a list field',
-                                             field=field, value=value)
+                                             field=self.field_name, value=value)
 
         container = self.container_type()
         if self.element_validator is not None:
             for val in value:
-                self.add_value(container, self.element_validator.validate(val, field=field))
+                self.add_value(container, self.element_validator.validate(val))
         else:
             if not isinstance(value, self.container_type):
                 container = self.container_type(value)
@@ -238,8 +261,9 @@ class ListField(BaseField):
 
         if self.max_items and len(container) > self.max_items:
             raise InvalidFieldValueException("Too many items in list, "
-                                             "max allowed: %d, passed: %r" % (self.max_items, len(container)))
-        return super(ListField, self).validate(container, field=field)
+                                             "max allowed: %d, passed: %r" % (self.max_items, len(container)),
+                                             field=self.field_name)
+        return super(ListField, self).validate(container)
 
 
 class DictField(BaseField):
@@ -255,29 +279,29 @@ class DictField(BaseField):
 
         super(DictField, self).__init__(**kwargs)
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         """Make sure that a list of valid fields is being used."""
         if not isinstance(value, dict):
             raise InvalidFieldValueException('Only dictionaries may be used in a dict field',
-                                             field=field, value=value)
+                                             field=self.field_name, value=value)
         value_dict = {}
 
         if self.key_validator is not None or self.value_validator is not None:
             for key, val in value.iteritems():
                 if self.key_validator is not None:
-                    validated_key = self.key_validator.validate(key, field=field)
+                    validated_key = self.key_validator.validate(key)
                 else:
                     validated_key = key
 
                 if self.value_validator is not None:
-                    validated_value = self.value_validator.validate(val, field=field)
+                    validated_value = self.value_validator.validate(val)
                 else:
                     validated_value = val
                 value_dict[validated_key] = validated_value
         else:
             value_dict = value
 
-        return super(DictField, self).validate(value_dict, field=field)
+        return super(DictField, self).validate(value_dict)
 
 
 class EmbeddedField(BaseField):
@@ -286,14 +310,14 @@ class EmbeddedField(BaseField):
     def __init__(self, document, **kwargs):
         from p2ee.orm.models.base import SimpleDocument
         if not issubclass(document, SimpleDocument):
-            raise InvalidFieldValueException('Invalid document')
+            raise InvalidFieldValueException('Invalid document', self.field_name)
 
         self.document = document
         super(EmbeddedField, self).__init__(**kwargs)
 
     def validate(self, value, field=None):
         doc = self.document(**value) if not isinstance(value, self.document) else value
-        return super(EmbeddedField, self).validate(doc, field=field)
+        return super(EmbeddedField, self).validate(doc)
 
 
 class BooleanField(BaseField):
@@ -301,32 +325,32 @@ class BooleanField(BaseField):
         kwargs.setdefault('default', False)
         super(BooleanField, self).__init__(**kwargs)
 
-    def validate(self, value, field=None):
+    def validate(self, value):
         if not isinstance(value, bool):
-            raise InvalidFieldValueException('Only boolean field is accepted', field=field,
+            raise InvalidFieldValueException('Only boolean field is accepted', field=self.field_name,
                                              value=value)
 
-        return super(BooleanField, self).validate(value, field=field)
+        return super(BooleanField, self).validate(value)
 
 
-class DateTimeField(BaseField):
-    def __init__(self, **kwargs):
+class DateTimeField(BoundedField):
+    def __init__(self, min_value=None, max_value=None, **kwargs):
         kwargs.setdefault('default', datetime.datetime.utcnow)
-        super(DateTimeField, self).__init__(**kwargs)
+        super(DateTimeField, self).__init__(min_value=None, max_value=None, **kwargs)
 
-    def validate(self, value, field=None):
-        if not isinstance(value, datetime.datetime):
+    def _instance_check(self, value):
+        if value is not None and not isinstance(value, datetime.datetime):
             try:
                 value = parser.parse(value, ignoretz=True)
             except ValueError:
-                raise InvalidFieldValueException('Not a valid datetime value', field=field, value=value)
-        return super(DateTimeField, self).validate(value, field=field)
+                raise InvalidFieldValueException('Not a valid datetime value', field=self.field_name, value=value)
+        return value
 
 
 class FloatField(IntField):
-    def _instance_check(self, value, field=None):
+    def _instance_check(self, value):
         if isinstance(value, (long, int)):
             value = float(value)
         if not isinstance(value, float):
-            raise InvalidFieldValueException('Value must be a valid float', field=field, value=value)
+            raise InvalidFieldValueException('Value must be a valid float', field=self.field_name, value=value)
         return value

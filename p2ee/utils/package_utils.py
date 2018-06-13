@@ -39,6 +39,11 @@ class PackageUtils(object):
         return sys.prefix if cls.isVirtualEnv() else '/etc'
 
     @classmethod
+    def isLambdaEnv(cls):
+        valid_lambda_envs = ["AWS_Lambda_python2.7", "AWS_Lambda_python3.6"]
+        return os.environ.get("AWS_EXECUTION_ENV") in valid_lambda_envs
+
+    @classmethod
     def isVirtualEnv(cls):
         return hasattr(sys, 'real_prefix')
 
