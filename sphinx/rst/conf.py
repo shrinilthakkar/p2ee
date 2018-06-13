@@ -15,9 +15,8 @@
 import os
 import sys
 from os.path import dirname as up
-code_path = os.path.join(up(up(up(__file__))), 'p2ee')
+code_path = up(up(up(__file__)))
 sys.path.append(code_path)
-
 
 # -- Project information -----------------------------------------------------
 
@@ -43,6 +42,12 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.coverage', 
+    'sphinx.ext.doctest',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.autosectionlabel'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
