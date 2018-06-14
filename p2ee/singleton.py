@@ -12,7 +12,7 @@ def get_default_args(func):
     return dict()
 
 
-DEFAULT_INSTANCE_NAME_KEY = 'MOE_DEFAULT_INSTANCE_NAME'
+DEFAULT_INSTANCE_NAME_KEY = 'DEFAULT_INSTANCE_NAME'
 
 
 class NamedInstanceMetaClass(type):
